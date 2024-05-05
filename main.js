@@ -1,75 +1,132 @@
-import './style.css'
-import Phaser, {physics } from 'phaser'
+import './style.css';
+import Phaser from 'phaser';
+
 const sizes = {
   width: 500,
-  height: 500
-}
-
+  height: 450
+};
 const speedDown = 300;
 
 const gameStartDiv = document.querySelector("#gameStartDiv");
 const gameStartBtn = document.querySelector("#gameStartBtn");
 const gameEndDiv = document.querySelector("#gameEndDiv");
-const gameWinLoseSpaan = document.querySelector("#gameWinLoseSpan")
+const gameWinLoseSpan = document.querySelector("#gameWinLoseSpan");
 const gameEndScoreSpan = document.querySelector("#gameEndScoreSpan");
+const gameCanvas = document.querySelector("#gameCanvas");
 
-class GameScene extends Phaser.Scene{
-  constructor(){
-    super("scene-game")
-    this.player
-    this.cursor
-    this.playerSpeed = speedDown+50;
-    this.target;
+class GameScene extends Phaser.Scene {
+  constructor() {
+    super("scene-game");
+    this.player;
+    this.cursors;
+    this.apples;
+    this.beetles;
     this.points = 0;
-    this.textScore
-    this.textTime
-    this.timedEvent
-    this.remainingTime
-    this.bgMusic
-    this.emitter
+    this.textScore;
+    this.textTime;
+    this.timedEvent;
+    this.remainingTime;
+    this.bgMusic;
+    this.coinMusic;
   }
-  preload(){
-    this.load.image("bg", "/assets/bg.png")
-    this.load.image("basket", "/assets/basket.png")
-    this.load.image("apple", "/assets/apple.png")
-    this.load.audio("coin", "/assets/coin.mp3")
-    this.load.audio("bgMusic", "/assets/bgMusic.mp3")
-    this.load.image("money", "/assets/money.png")
+
+  preload() {
+    this.load.image("bg", "/assets/bg.png");
+    this.load.image("basket", "/assets/basket.png");
+    this.load.image("apple", "/assets/apple.png");
+    this.load.image("beetle", "/assets/beetle.png");
+    this.load.image("money", "/assets/money.png");
+    this.load.audio("coin", "/assets/coin.mp3");
+    this.load.audio("bgMusic", "/assets/bgMusic.mp3");
   }
   
-  create(){
-    this.scene.pause("scene-game")
-    this.coinMusic =this.sound.add("coin")
-    this.bgMusic = this.sound.add("bgMusic")
-    this.bgMusic.play()
+  create() {
+    this.bgMusic = this.sound.add("bgMusic");
+    this.bgMusic.play();
 
+    this.add.image(0, 0, "bg").setOrigin(0, 0);
 
-    this.add.image(0,0,"bg").setOrigin(0,0)
-    this.player = this.physics.add.image(50,sizes.height-100,"basket").setOrigin(0,0)
-    this.player.setImmovable(true)
-    this.player.body.allowGravity = false
-    this.player.setCollideWorldBounds(true)
-    this.player.setSize(this.player.width-this.player.width/4, this.player.height/6).setOffset(this.player.width/10, this.player.height -  this.player.height/10)
+    this.player = this.physics.add.image(50, sizes.height - 100, "basket");
+    this.player.setCollideWorldBounds(true);
+    this.player.setImmovable(true);
 
-    this.target = this.physics.add.image(0,0,"apple").setOrigin(0,0);
-    this.target.setMaxVelocity(0, speedDown)
+    this.apples = this.physics.add.group();
+    this.beetles = this.physics.add.group();
 
-    this.physics.add.overlap(this.target, this.player, this.targetHit, null,this)
+    this.physics.add.overlap(this.player, this.apples, this.collectApple, null, this);
+    this.physics.add.overlap(this.player, this.beetles, this.hitBeetle, null, this);
 
-    this.cursor = this.input.keyboard.createCursorKeys();
+    this.cursors = this.input.keyboard.createCursorKeys();
 
-    this.textScore = this.add.text(sizes.width - 120, 10, "score:0",{
+    this.textScore = this.add.text(sizes.width - 120, 10, "Score: 0", {
       font: "25px Arial",
       fill: "#000000",
-    })
+    });
 
-    this.textTime = this.add.text(10, 10, "Remaining Time:00",{
+    this.textTime = this.add.text(10, 10, "Remaining Time: 30", {
       font: "25px Arial",
       fill: "#000000",
-    })
+    });
     
-    this.timedEvent = this.time.delayedCall(30000, this.gameOver, [], this)
+    this.timedEvent = this.time.addEvent({
+      delay: 30000,
+      callback: this.gameOver,
+      callbackScope: this,
+      loop: false
+    });
 
+    this.appleTimer = this.time.addEvent({
+      delay: 500,
+      callback: this.spawnApple,
+      callbackScope: this,
+      loop: true
+    });
+
+    this.beetleTimer = this.time.addEvent({
+      delay: 300,
+      callback: this.spawnBeetle,
+      callbackScope: this,
+      loop: true
+    });
+  }
+
+  update() {
+    this.remainingTime = Math.ceil((this.timedEvent.delay - this.timedEvent.elapsed) / 1000);
+    this.textTime.setText(`Remaining Time: ${this.remainingTime}`);
+
+    if (this.cursors.left.isDown) {
+      this.player.setVelocityX(-speedDown);
+    } else if (this.cursors.right.isDown) {
+      this.player.setVelocityX(speedDown);
+    } else {
+      this.player.setVelocityX(0);
+    }
+  }
+
+  spawnApple() {
+    const randomX = Phaser.Math.Between(20, sizes.width - 20);
+    const apple = this.apples.create(randomX, 0, "apple");
+    apple.setVelocity(0, speedDown);
+  }
+
+  spawnBeetle() {
+    const randomX = Phaser.Math.Between(10, sizes.width - 20);
+    const beetle = this.beetles.create(randomX, 0, "beetle");
+    beetle.setVelocity(0, speedDown);
+  }
+
+  collectApple(player, apple) {
+    apple.destroy();
+    this.points++;
+    this.textScore.setText(`Score: ${this.points}`);
+  
+    // Play coin sound
+    if (!this.coinMusic) {
+      this.coinMusic = this.sound.add("coin");
+    }
+    this.coinMusic.play();
+  
+    // Create a particle emitter at the player's position
     this.emitter = this.add.particles(0,0, "money",{
       speed: 100,
       gravityY:speedDown-200,
@@ -77,53 +134,26 @@ class GameScene extends Phaser.Scene{
       duration: 100,
       emitting:false
     })
+
     this.emitter.startFollow(this.player, this.player.width/2, this.player.height/2, true)
-    
-  }
-  update(){
-    this.remainingTime = this.timedEvent.getRemainingSeconds()
-    this.textTime.setText(`Remaining Time: ${Math.round(this.remainingTime).toString()}`)
-
-    if(this.target.y >= sizes.height){
-      this.target.setY(0);
-      this.target.setX(this.getRandomX())
-    }
-    const {left, right } = this.cursor;
-    if(left.isDown){
-      this.player.setVelocityX(-this.playerSpeed);
-    }else if(right.isDown){
-      this.player.setVelocityX(this.playerSpeed);
-    }else {
-      this.player.setVelocityX(0);
-    }
-
-  }
-
-  getRandomX(){
-    return Math.floor(Math.random() * 480)
-  }
-
-  targetHit() {
     this.emitter.start()
-    this.coinMusic.play();
-    this.target.setY(0);
-    this.target.setX(this.getRandomX());
-    this.points++;
-    this.textScore.setText(`Score: ${this.points}`)
-
   }
-  gameOver(){
-    this.sys.game.destroy(true)
-    if(this.points >=10){
-      gameEndScoreSpan.textContent = this.points
-      gameWinLoseSpaan.textContent = "Win! "
+  
+  hitBeetle(player, beetle) {
+    beetle.destroy();
+    if (this.points > 0) {
+      this.points--;
+      this.textScore.setText(`Score: ${this.points}`);
     }
-    else{
-      gameEndScoreSpan.textContent = this.points
-      gameWinLoseSpaan.textContent = "Lose! "
-    }
+  }
 
-    gameEndDiv.style.display = "flex"
+  gameOver() {
+    this.bgMusic.stop();
+    // this.scene.stop("scene-game");
+    const win = this.points >= 10;
+    gameWinLoseSpan.textContent = win ? "Win!" : "Lose!";
+    gameEndScoreSpan.textContent = this.points;
+    gameEndDiv.style.display = "flex";
   }
 }
 
@@ -132,19 +162,20 @@ const config = {
   width: sizes.width,
   height: sizes.height,
   canvas: gameCanvas,
-  physics:{
-    default:"arcade",
-    arcade:{
-      gravity:{y:speedDown},
-      debug:true
+  physics: {
+    default: "arcade",
+    arcade: {
+      gravity: { y: speedDown },
+      debug: true
     }
   },
-  scene:[GameScene]
-}
+  scene: [GameScene]
+};
 
-const game = new Phaser.Game(config)
+const game = new Phaser.Game(config);
 
-gameStartBtn.addEventListener("click", ()=>{
-  gameStartDiv.style.display = "none"
-  game.scene.resume("scene-game")
-})
+gameStartBtn.addEventListener("click", () => {
+  gameStartDiv.style.display = "none";
+  gameCanvas.style.display = "flex";
+  game.scene.start("scene-game");
+});
