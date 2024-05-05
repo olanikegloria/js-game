@@ -13,6 +13,7 @@ const gameEndDiv = document.querySelector("#gameEndDiv");
 const gameWinLoseSpan = document.querySelector("#gameWinLoseSpan");
 const gameEndScoreSpan = document.querySelector("#gameEndScoreSpan");
 const gameCanvas = document.querySelector("#gameCanvas");
+const gameReStartBtn =document.querySelector("#gameReStartBtn");
 
 class GameScene extends Phaser.Scene {
   constructor() {
@@ -178,4 +179,9 @@ gameStartBtn.addEventListener("click", () => {
   gameStartDiv.style.display = "none";
   gameCanvas.style.display = "flex";
   game.scene.start("scene-game");
+});
+
+gameReStartBtn.addEventListener("click", () => {
+    
+  window.location.reload();
 });

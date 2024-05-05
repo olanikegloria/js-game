@@ -1,7 +1,7 @@
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   --dkClr: #181818;
-  --liClr: whitesmoke;
+  --liClr: black;
   --accClr: #0D0D35;
 }
 *{
@@ -15,7 +15,7 @@ html,body{
 }
 
 body{
-  background-color: var(--dkClr);
+  background: linear-gradient(101.8deg, rgb(28, 28, 224) -0.2%, rgb(153, 68, 230) 55.2%, rgb(235, 18, 180) 84.4%);
   color: var(--liClr);
   display: flex;
   flex-direction: column;
@@ -36,8 +36,8 @@ main{
 
 #gameCanvas{
   display:none;
-  border: 5px solid red;
-  border-radius: 5px;
+  border-radius: 20px;
+  box-shadow: 10px 20px 20px -10px rgba(255, 0, 106, 0.8);
   position: absolute;
   top: 50%;
   left: 50%;
@@ -50,7 +50,7 @@ main{
 .gameUI {
   width: 100%;
   height: 100%;
-  background-color: var(--accClr);
+  background: linear-gradient(rgba(248, 4, 187, 0.5), rgba(206, 110, 126, 0.938));
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -71,23 +71,23 @@ main{
   display: none;
 }
 
-#gameStartBtn{
+#gameStartBtn, #gameReStartBtn{
   display: inline-block;
   width: 100px;
   padding:8px 15px;
   margin: 20px 0;
   text-align: center;
   font-family: inherit;
-  border-radius: 10px;;
+  border-radius: 13px ;
 }
 
-#gameStartBtn p{
+#gameStartBtn,#gameReStartBtn p{
   margin-top: 0;
 }
 
-#gameStartBtn:hover{
-  background-color: var(--dkClr);
-  border: 0.5px solid var(--liClr);
+#gameStartBtn, #gameReStartBtn:hover{
+  background: linear-gradient(101.8deg, rgb(28, 28, 224) -0.2%, rgb(153, 68, 230) 55.2%, rgb(235, 18, 180) 84.4%);;
+  border: 2px solid var(--liClr);
   color: var(--liClr);
   cursor:pointer;
 }
